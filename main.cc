@@ -6,9 +6,10 @@
 #include <stdlib.h>
 #include <curl/curl.h>
 
+#define DEFAULT_INSTANCE "http://cpoi.softplus.fr"
+
 static std::size_t getHtmlCallback(void *contents, std::size_t size, std::size_t nmemb, void *ptr)
 {
-    // Cast ptr to std::string pointer and append contents to that string
     ((std::string*)ptr)->append((char*)contents, size * nmemb);
     return size * nmemb;
 }
@@ -51,7 +52,7 @@ int main(int argc, char const *argv[]) {
 
     // Initialize CURL session
     curl = curl_easy_init();
-    std::string url = "http://cpoi.softplus.fr?" + std::string(argv[1]) +"=" + urlEncode(std::string(argv[2]));
+    std::string url = std::string(DEFAULT_INSTANCE) + "?" + std::string(argv[1]) +"=" + urlEncode(std::string(argv[2]));
 
     if (curl) {
         // Set the URL for the request
@@ -61,15 +62,6 @@ int main(int argc, char const *argv[]) {
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, getHtmlCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &htmlBuffer);
-
-        // // Set the callback function to write the response data
-        // curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-
-        // // Output the response directly to stdout
-        // curl_easy_setopt(curl, CURLOPT_WRITEDATA, stdout);
-
-        // // Perform the request and store the result
-        // res = curl_easy_perform(curl);
 
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         res = curl_easy_perform(curl);
