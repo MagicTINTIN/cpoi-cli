@@ -1,16 +1,50 @@
-#include <string>
-#include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <stdio.h>
 #include <stdlib.h>
 #include <curl/curl.h>
 
+// Set the configuration location depending on OS
+#if defined(_WIN32)
+#error No idea of how Windows works ! Need to be implemented...
+#define DEFAULT_CONFIG_FILE ""
+#elif defined(__APPLE__)
+#error No idea of how Apple systems work ! Need to be implemented...
+#define DEFAULT_CONFIG_FILE ""
+#elif defined(__linux__)
+#define DEFAULT_CONFIG_FILE "~/.config/cpoi/config"
+#else
+#error Unknown OS, you might need to configure the DEFAULT_CONFIG_FILE var yourself
+#define DEFAULT_CONFIG_FILE ""
+#endif
+
 #define DEFAULT_INSTANCE "http://cpoi.softplus.fr"
+
+struct settings
+{
+    int loadSuccess;
+    /* data */
+};
+
+settings getSettings()
+{
+    if (FILE *file = fopen(DEFAULT_CONFIG_FILE, "r"))
+    {
+        fclose(file);
+        return {1};
+    }
+    else
+    {
+        return {0};
+    }
+}
 
 static std::size_t getHtmlCallback(void *contents, std::size_t size, std::size_t nmemb, void *ptr)
 {
-    ((std::string*)ptr)->append((char*)contents, size * nmemb);
+    ((std::string *)ptr)->append((char *)contents, size * nmemb);
     return size * nmemb;
 }
 
@@ -39,22 +73,24 @@ std::string urlEncode(const std::string &input)
     return encoded.str();
 }
 
-
-int main(int argc, char const *argv[]) {
-    if (argc != 3) {
+int main(int argc, char const *argv[])
+{
+    if (argc != 3)
+    {
         fprintf(stderr, "%s requires 2 parametters : type and value\n./cpoi-cli <c|uc|p|d> <value>\n", argv[0]);
         exit(1);
     }
-    
+
     std::string htmlBuffer;
     CURL *curl;
     CURLcode res;
 
     // Initialize CURL session
     curl = curl_easy_init();
-    std::string url = std::string(DEFAULT_INSTANCE) + "?" + std::string(argv[1]) +"=" + urlEncode(std::string(argv[2]));
+    std::string url = std::string(DEFAULT_INSTANCE) + "?" + std::string(argv[1]) + "=" + urlEncode(std::string(argv[2]));
 
-    if (curl) {
+    if (curl)
+    {
         // Set the URL for the request
         // curl_easy_setopt(curl, CURLOPT_URL, url);
 
@@ -67,12 +103,13 @@ int main(int argc, char const *argv[]) {
         res = curl_easy_perform(curl);
 
         // Check for errors
-        if (res != CURLE_OK) {
+        if (res != CURLE_OK)
+        {
             fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
             return 1;
         }
 
-        std::cout << htmlBuffer << std::endl; 
+        std::cout << htmlBuffer << std::endl;
         // Clean up the CURL session
         curl_easy_cleanup(curl);
     }
