@@ -41,7 +41,7 @@ std::string urlEncode(const std::string &input)
 
 int main(int argc, char const *argv[]) {
     if (argc != 3) {
-        fprintf(stderr, "%s requires 2 parametters : type and value\n./cpoi-cli [c|uc|p|d] <value>\n", argv[0]);
+        fprintf(stderr, "%s requires 2 parametters : type and value\n./cpoi-cli <c|uc|p|d> <value>\n", argv[0]);
         exit(1);
     }
     
