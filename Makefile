@@ -9,11 +9,14 @@ TARGET = cpoi-cli
 
 all: $(TARGET)
 
-$(TARGET): main.o
-	$(CXX) $(CXXFLAGS) -o $(TARGET) main.o $(LIBS)
+$(TARGET): main.o tools.o
+	$(CXX) $(CXXFLAGS) -o $(TARGET) main.o tools.o $(LIBS)
 
 main.o: main.cc
 	$(CXX) $(CXXFLAGS) -c main.cc
+
+tools.o: tools.cc
+	$(CXX) $(CXXFLAGS) -c tools.cc
 
 clean:
 	rm -f *.o $(TARGET)

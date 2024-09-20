@@ -23,7 +23,7 @@ void helpError(std::string binary) {
 
 int arguments(std::vector<std::string> &args, std::string const &v)
 {
-    for (size_t i = 0; i < args.size(); ++i)
+    for (int i = 0; i < args.size(); ++i)
     {
         if (args[i] == "--config" || args[i] == "-c")
         {

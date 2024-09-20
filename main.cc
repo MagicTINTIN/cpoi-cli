@@ -5,7 +5,11 @@
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector>
 #include <curl/curl.h>
+#include "tools.hh"
+
+#define VERSION "0.1.1"
 
 // Set the configuration location depending on OS
 #if defined(_WIN32)
@@ -48,38 +52,12 @@ static std::size_t getHtmlCallback(void *contents, std::size_t size, std::size_t
     return size * nmemb;
 }
 
-std::string urlEncode(const std::string &input)
-{
-    std::ostringstream encoded;
-    encoded.fill('0');
-    encoded << std::hex;
-
-    for (char c : input)
-    {
-        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~')
-        {
-            encoded << c;
-        }
-        else if (c == ' ')
-        {
-            encoded << '+';
-        }
-        else
-        {
-            encoded << '%' << std::setw(2) << int(static_cast<unsigned char>(c));
-        }
-    }
-
-    return encoded.str();
-}
-
 int main(int argc, char const *argv[])
 {
-    if (argc != 3)
-    {
-        fprintf(stderr, "%s requires 2 parametters : type and value\n./cpoi-cli <c|uc|p|d> <value>\n", argv[0]);
-        exit(1);
-    }
+    std::vector<std::string> args(argv, argv + argc);
+    
+    int r = arguments(args, VERSION);
+    if (r <= 0) return -r;
 
     std::string htmlBuffer;
     CURL *curl;
