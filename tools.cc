@@ -70,7 +70,7 @@ std::string urlEncode(const std::string &input)
 
     for (char c : input)
     {
-        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~')
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~' || c == '?')
         {
             encoded << c;
         }
@@ -110,7 +110,7 @@ void setValue(std::string &value)
     if (value != "")
         return;
     std::string s;
-    std::cout << "Paste text to copy here:\n";
+    std::cout << "Paste text to copy here (Press Enter and then Ctrl+C or Ctrl+D to end copy):\n";
     while (getline(std::cin, s))
     {
         // if (s.empty())
@@ -141,7 +141,7 @@ static std::size_t getHtmlCallback(void *contents, std::size_t size, std::size_t
 }
 
 void sendRequest(std::string &instance, std::string &mode, std::string &value) {
-    std::string htmlBuffer;
+    std::string htmlBuffer = "";
     CURL *curl;
     CURLcode res;
 
@@ -169,7 +169,7 @@ void sendRequest(std::string &instance, std::string &mode, std::string &value) {
             exit(5);
         }
 
-        std::cout << htmlBuffer << std::endl;
+        std::cout << ((mode == "uc" || mode == "c") ? " Clipboard code to copy: " : "Value from the clipboard: ") << htmlBuffer << std::endl;
         // Clean up the CURL session
         curl_easy_cleanup(curl);
     }

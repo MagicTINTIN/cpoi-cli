@@ -26,6 +26,8 @@
 #endif
 
 #define DEFAULT_INSTANCE "http://cpoi.softplus.fr"
+// #define DEFAULT_INSTANCE "https://etud.insa-toulouse.fr/~serviere/cpoi"
+
 
 struct settings
 {
@@ -56,7 +58,7 @@ void signalHandler(int signum) {
     // std::cout << "Captured text:\n";
     // std::cout << value << std::endl;
     if (!settingsOk || value == "") {
-        std::cerr << "Cancelled.\n";
+        std::cerr << " Cancelled.\n";
         exit(signum);
     }
     sendRequest(usedSettings.instance, mode, value);
