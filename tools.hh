@@ -6,3 +6,5 @@ std::string urlEncode(const std::string &input);
 void setMode(std::string &mode);
 void setValue(std::string &value);
 void setCode(std::string &code);
+
+void sendRequest(std::string &instance, std::string &mode, std::string &value);

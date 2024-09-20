@@ -5,8 +5,8 @@
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
+#include <csignal>
 #include <vector>
-#include <curl/curl.h>
 #include "tools.hh"
 
 #define VERSION "0.1.1"
@@ -31,73 +31,57 @@ struct settings
 {
     int loadSuccess;
     /* data */
+    std::string instance;
 };
+
+std::string mode(""), value("");
+settings usedSettings;
+bool settingsOk = false;
 
 settings getSettings()
 {
     if (FILE *file = fopen(DEFAULT_CONFIG_FILE, "r"))
     {
         fclose(file);
-        return {1};
+        return {1, DEFAULT_INSTANCE};
     }
     else
     {
-        return {0};
+        return {0, DEFAULT_INSTANCE};
     }
 }
 
-static std::size_t getHtmlCallback(void *contents, std::size_t size, std::size_t nmemb, void *ptr)
-{
-    ((std::string *)ptr)->append((char *)contents, size * nmemb);
-    return size * nmemb;
+void signalHandler(int signum) {
+    // std::cout << "\nInput ended by Ctrl+C\n";
+    // std::cout << "Captured text:\n";
+    // std::cout << value << std::endl;
+    if (!settingsOk || value == "") {
+        std::cerr << "Cancelled.\n";
+        exit(signum);
+    }
+    sendRequest(usedSettings.instance, mode, value);
+    exit(0);
 }
 
 int main(int argc, char const *argv[])
 {
     std::vector<std::string> args(argv, argv + argc);
-    std::string mode(""), value("");
     int r = arguments(args, VERSION, mode, value);
     if (r <= 0)
         return -r;
+    
+    signal(SIGINT, signalHandler);
+
+    usedSettings = getSettings();
 
     setMode(mode);
+    settingsOk = true;
     if (mode == "c" || mode == "uc")
         setValue(value);
     else
         setCode(value);
 
-    std::string htmlBuffer;
-    CURL *curl;
-    CURLcode res;
-
-    // Initialize CURL session
-    curl = curl_easy_init();
-    std::string url = std::string(DEFAULT_INSTANCE) + "?" + mode + "=" + urlEncode(value);
-
-    if (curl)
-    {
-        // Set the URL for the request
-        // curl_easy_setopt(curl, CURLOPT_URL, url);
-
-        // Follow HTTP 3xx redirects
-        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, getHtmlCallback);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &htmlBuffer);
-
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        res = curl_easy_perform(curl);
-
-        // Check for errors
-        if (res != CURLE_OK)
-        {
-            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-            return 1;
-        }
-
-        std::cout << htmlBuffer << std::endl;
-        // Clean up the CURL session
-        curl_easy_cleanup(curl);
-    }
+    sendRequest(usedSettings.instance, mode, value);
 
     return 0;
 }

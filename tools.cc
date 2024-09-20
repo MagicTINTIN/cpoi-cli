@@ -6,6 +6,7 @@
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
+#include <curl/curl.h>
 #include "tools.hh"
 
 #define TAB "    "
@@ -112,10 +113,8 @@ void setValue(std::string &value)
     std::cout << "Paste text to copy here:\n";
     while (getline(std::cin, s))
     {
-        if (s.empty())
-        {
-            break;
-        }
+        // if (s.empty())
+        //     break;
         value += "\n" + s;
     }
 }
@@ -130,4 +129,48 @@ void setCode(std::string &code)
         code = s;
     }
     // std::cout << "Mode: " << code << std::endl;
+}
+
+// CURL //
+
+
+static std::size_t getHtmlCallback(void *contents, std::size_t size, std::size_t nmemb, void *ptr)
+{
+    ((std::string *)ptr)->append((char *)contents, size * nmemb);
+    return size * nmemb;
+}
+
+void sendRequest(std::string &instance, std::string &mode, std::string &value) {
+    std::string htmlBuffer;
+    CURL *curl;
+    CURLcode res;
+
+    // Initialize CURL session
+    curl = curl_easy_init();
+    std::string url = instance + "?" + mode + "=" + urlEncode(value);
+
+    if (curl)
+    {
+        // Set the URL for the request
+        // curl_easy_setopt(curl, CURLOPT_URL, url);
+
+        // Follow HTTP 3xx redirects
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, getHtmlCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &htmlBuffer);
+
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        res = curl_easy_perform(curl);
+
+        // Check for errors
+        if (res != CURLE_OK)
+        {
+            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            exit(5);
+        }
+
+        std::cout << htmlBuffer << std::endl;
+        // Clean up the CURL session
+        curl_easy_cleanup(curl);
+    }
 }
