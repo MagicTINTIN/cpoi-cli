@@ -55,9 +55,16 @@ static std::size_t getHtmlCallback(void *contents, std::size_t size, std::size_t
 int main(int argc, char const *argv[])
 {
     std::vector<std::string> args(argv, argv + argc);
-    
-    int r = arguments(args, VERSION);
-    if (r <= 0) return -r;
+    std::string mode(""), value("");
+    int r = arguments(args, VERSION, mode, value);
+    if (r <= 0)
+        return -r;
+
+    setMode(mode);
+    if (mode == "c" || mode == "uc")
+        setValue(value);
+    else
+        setCode(value);
 
     std::string htmlBuffer;
     CURL *curl;
@@ -65,7 +72,7 @@ int main(int argc, char const *argv[])
 
     // Initialize CURL session
     curl = curl_easy_init();
-    std::string url = std::string(DEFAULT_INSTANCE) + "?" + std::string(argv[1]) + "=" + urlEncode(std::string(argv[2]));
+    std::string url = std::string(DEFAULT_INSTANCE) + "?" + mode + "=" + urlEncode(value);
 
     if (curl)
     {
