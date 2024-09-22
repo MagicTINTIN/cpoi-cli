@@ -8,3 +8,4 @@ void setValue(std::string &value);
 void setCode(std::string &code);
 
 void sendRequest(std::string &instance, std::string &mode, std::string &value);
+std::string request(std::string &instance, std::string const &mode, std::string const &value);

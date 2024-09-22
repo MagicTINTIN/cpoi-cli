@@ -6,9 +6,12 @@
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <curl/curl.h>
 #include "tools.hh"
 
+#define MAX_LENGTH 1800
+#define MAX_LENGTH_SPLIT MAX_LENGTH - 30
 #define TAB "    "
 
 void help(std::string binary)
@@ -87,6 +90,23 @@ std::string urlEncode(const std::string &input)
     return encoded.str();
 }
 
+std::string filterToCode(const std::string &input)
+{
+    std::ostringstream encoded;
+    encoded.fill('0');
+    encoded << std::hex;
+
+    for (char c : input)
+    {
+        if (isalnum(c) || c == '-')
+        {
+            encoded << c;
+        }
+    }
+
+    return encoded.str();
+}
+
 void setMode(std::string &mode)
 {
     std::string s;
@@ -133,14 +153,54 @@ void setCode(std::string &code)
 
 // CURL //
 
-
 static std::size_t getHtmlCallback(void *contents, std::size_t size, std::size_t nmemb, void *ptr)
 {
     ((std::string *)ptr)->append((char *)contents, size * nmemb);
     return size * nmemb;
 }
 
-void sendRequest(std::string &instance, std::string &mode, std::string &value) {
+void sendRequest(std::string &instance, std::string &mode, std::string &value)
+{
+    if (value.size() < MAX_LENGTH || (mode != "c" && mode != "uc"))
+    {
+        std::string val = request(instance, mode, value);
+        std::cout << ((mode == "uc" || mode == "c") ? (" Clipboard code to copy: " + filterToCode(val)) : ("Value from the clipboard: " + val)) << std::endl;
+    }
+    else
+    {
+        std::vector<std::string> requests;
+
+        for (std::size_t i = 0; i < value.size(); i += MAX_LENGTH_SPLIT)
+        {
+            requests.push_back(value.substr(i, MAX_LENGTH_SPLIT));
+        }
+
+        std::string code = filterToCode(request(instance, mode, requests[0]));
+        if (code.size() > 20 || code.size() < 5)
+            std::cerr << "Error while sending part 1/" << requests.size() << "! (code: " << code << " [" << code.size() << "])\n";
+        else
+        {
+            std::cout << ".";
+            std::flush(std::cout);
+        }
+        for (int i = 1; i < requests.size(); i++)
+        {
+            usleep(1000000);
+            std::string ret = filterToCode(request(instance, "a", code + ":" + requests[i]));
+            if (ret == "1")
+            {
+                std::cout << ".";
+                std::flush(std::cout);
+            }
+            else
+                std::cerr << "Error while sending part " << (i + 1) << "/" << requests.size() << "!\n";
+        }
+        std::cout << "\nClipboard code to copy: " << code << std::endl;
+    }
+}
+
+std::string request(std::string &instance, std::string const &mode, std::string const &value)
+{
     std::string htmlBuffer = "";
     CURL *curl;
     CURLcode res;
@@ -168,9 +228,12 @@ void sendRequest(std::string &instance, std::string &mode, std::string &value) {
             fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
             exit(5);
         }
+        std::string v = htmlBuffer;
 
-        std::cout << ((mode == "uc" || mode == "c") ? " Clipboard code to copy: " : "Value from the clipboard: ") << htmlBuffer << std::endl;
         // Clean up the CURL session
         curl_easy_cleanup(curl);
+
+        return v;
     }
+    return "CURL ERROR";
 }

@@ -39,6 +39,7 @@ struct settings
 std::string mode(""), value("");
 settings usedSettings;
 bool settingsOk = false;
+bool sending = false;
 
 settings getSettings()
 {
@@ -57,10 +58,11 @@ void signalHandler(int signum) {
     // std::cout << "\nInput ended by Ctrl+C\n";
     // std::cout << "Captured text:\n";
     // std::cout << value << std::endl;
-    if (!settingsOk || value == "") {
+    if (!settingsOk || value == "" || sending) {
         std::cerr << " Cancelled.\n";
         exit(signum);
     }
+    sending = true;
     sendRequest(usedSettings.instance, mode, value);
     exit(0);
 }
@@ -83,6 +85,7 @@ int main(int argc, char const *argv[])
     else
         setCode(value);
 
+    sending = true;
     sendRequest(usedSettings.instance, mode, value);
 
     return 0;
