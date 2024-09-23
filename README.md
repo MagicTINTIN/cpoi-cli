@@ -1,5 +1,6 @@
 # CPOI-CLI (CPOI command line client)
 > Copy Paste Over Internet
+> ![CPOI logo](./assets/logo.png)<br>
 ---
 # What is it ?
 It's a command line interface tool to simply easily copy and paste over machines.
