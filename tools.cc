@@ -166,6 +166,10 @@ void sendRequest(std::string &instance, std::string &mode, std::string &value)
         std::string val = request(instance, mode, value);
         std::cout << ((mode == "uc" || mode == "c") ? (" Clipboard code to copy: " + filterToCode(val)) : ("Value from the clipboard: " + val)) << std::endl;
     }
+    else if (value.size() >= 60000) {
+        std::cerr << " Clipboard can not be bigger than 60000 chars.\n";
+        exit(3);
+    }
     else
     {
         std::vector<std::string> requests;
